@@ -25,22 +25,36 @@ classdef CSG
             toc;
         end     
  
-        function wp = getWP(obj, idxTrace, tMute)
-            if tMute ~=0
-                idxMute = round(tMute/obj.dt);
-                trace = obj.seis(:,idxTrace); 
-                trace(idxMute:end)=0;
-            else
-                trace = obj.seis(:,idxTrace);
+        function wp = getWP(obj, idxTrace, varargin)
+            trace = obj.seis(:,idxTrace);
+            switch nargin
+                case 2
+                    tStart = 0;  tEnd = (obj.nt-1)*obj.dt;
+                case 3
+                    tStart = 0;  tEnd = varargin{1};
+                    idxMute = round(tEnd/obj.dt);
+                    trace(idxMute:end)=0;
+                case 5
+                    tStart = varagin(1);  tEnd = varargin{2};
+                    idxMute1 = round(tStart/obj.dt);
+                    idxMute2 = round(tEnd/obj.dt);
+                    trace(idxMute2:end)=0;
+                    trace(1:idxMute1)=0;
+                otherwise
+                    error('max 4 input variables for getWP');
             end
+             
             tic;
-            sprintf('Computing wave path (sz=%.2f m, gz = %.2f m) ... \n', ...
+            fprintf('Computing wave path (sz=%.2f m, gz = %.2f m) ... \n',...
                 obj.sz, obj.gz(idxTrace));
-            wp = a2d_wavepath_abc28(trace, obj.vel,...
+            wp0 = a2d_wavepath_abc28(trace, obj.vel,...
                 obj.nbc, obj.dx, obj.nt, obj.dt, obj.wavelet,...
                 obj.sx, obj.sz, obj.gx(idxTrace), obj.gz(idxTrace));
             toc;
+            wp = WAVEPATH(obj.sx, obj.sz, obj.gx(idxTrace), obj.gz(idxTrace), ...
+                obj.dx, tStart, tEnd, wp0);
         end
+        
         
         function plotCSG(obj)
             figure;
@@ -75,24 +89,6 @@ classdef CSG
         
         function saveseis(obj)
             save(sprintf('seisSZ%.fm.mat', obj.sz), obj.seis);
-        end
-        
-        function saveFig(obj, type, idxTrace)
-            if ~exist('figDir', 'var')
-                figDir = fullfile(pwd, 'Figures');
-                if ~exist(figDir, 'dir')
-                    mkdir(figDir);
-                end
-            end
-            
-            if strcmp(type, 'wavepath')
-                figname = fullfile(figDir, ...
-                    sprintf('%sz%.fm_%s_gz%.fm.fig', obj.sz, type, obj.gz(idxTrace)));
-            else
-                figname = fullfile(figDir, ...
-                    sprintf('%sz_%s', type));
-            end
-            savefig(figname);
         end
         
         
