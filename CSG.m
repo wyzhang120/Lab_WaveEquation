@@ -23,39 +23,71 @@ classdef CSG
             obj.wavelet = s;
             obj.vel =vel;
             toc;
-        end     
- 
+        end   
+        
         function wp = getWP(obj, idxTrace, varargin)
             trace = obj.seis(:,idxTrace);
-            switch nargin
-                case 2
-                    tStart = 0;  tEnd = (obj.nt-1)*obj.dt;
-                case 3
-                    tStart = 0;  tEnd = varargin{1};
-                    idxMute = round(tEnd/obj.dt);
-                    trace(idxMute:end)=0;
-                case 5
-                    tStart = varagin(1);  tEnd = varargin{2};
-                    idxMute1 = round(tStart/obj.dt);
-                    idxMute2 = round(tEnd/obj.dt);
-                    trace(idxMute2:end)=0;
-                    trace(1:idxMute1)=0;
-                otherwise
-                    error('max 4 input variables for getWP');
+            p = inputParser;
+            validScalarPosNum = @(x) isnumeric(x) && isscalar(x) && (x > 0);
+            expectedShapes = {'direct', 'diving', 'refrac','diffr', 'refl'};
+            addRequired(p, 'obj');
+            addRequired(p, 'idxTrace', validScalarPosNum);            
+            addParameter(p, 'tStart', 0, validScalarPosNum);
+            addParameter(p, 'tEnd', -1, validScalarPosNum);
+            addParameter(p, 'wavetype', 'direct', @(x) any(validatestring(x,expectedShapes)));
+            addParameter(p, 'reflCoeff', 0, @isnumeric)
+            parse(p, obj, idxTrace, varargin{:})
+            
+            wavetype = p.Results.wavetype;
+            refl_ss = p.Results.reflCoeff;
+            tStart = p.Results.tStart;
+            if tStart == 0
+               idxMute1 = [];
+            else
+               idxMute1 = round(tStart/obj.dt);
             end
-             
+            
+            tEnd = p.Results.tEnd;
+            if tEnd < 0
+                tEnd = (obj.nt-1)*obj.dt;
+                idxMute2 = [];
+            else
+                idxMute2 = round(tEnd/obj.dt);
+            end            
+            
+            if ~isempty(idxMute1)
+                trace(1:idxMute1) = 0;
+            end
+            
+            if ~isempty(idxMute2)
+                trace(idxMute2:end) = 0;
+            end
+            
             tic;
             fprintf('Computing wave path (sz=%.2f m, gz = %.2f m) ... \n',...
                 obj.sz, obj.gz(idxTrace));
-            wp0 = a2d_wavepath_abc28(trace, obj.vel,...
-                obj.nbc, obj.dx, obj.nt, obj.dt, obj.wavelet,...
-                obj.sx, obj.sz, obj.gx(idxTrace), obj.gz(idxTrace));
+            switch wavetype
+                case {'direct', 'diving', 'refrac'}
+                   wp0 = a2d_wavepath_abc28(trace, obj.vel,...
+                            obj.nbc, obj.dx, obj.nt, obj.dt, obj.wavelet,...
+                            obj.sx, obj.sz, obj.gx(idxTrace), obj.gz(idxTrace)); 
+                case {'diffr', 'refl'}
+                    if refl_ss == 0
+                        error('Reflectivity keyword param "reflCoeff" not provided');
+                    else
+                    wp0=a2d_wavepath_abc28_refl(trace, obj.vel, refl_ss, ...
+                        obj.nbc, obj.dx, obj.nt, obj.dt, obj.wavelet, ...
+                        obj.sx, obj.sz, obj.gx(idxTrace), obj.gz(idxTrace));
+                    end
+                otherwise
+                    error('wavetype not recognized');
+            end            
             toc;
             wp = WAVEPATH(obj.sx, obj.sz, obj.gx(idxTrace), obj.gz(idxTrace), ...
                 obj.dx, tStart, tEnd, wp0);
         end
-        
-        
+ 
+  
         function plotCSG(obj)
             figure;
             t=(0:obj.nt-1)*obj.dt;

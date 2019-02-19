@@ -26,8 +26,8 @@ classdef WAVEPATH
             [nz, nx] = size(obj.wp); 
             x = (0:nx-1)*obj.dx; z = (0:nz-1)*obj.dx;
             imagesc(x,z, obj.wp);colormap(gray);caxis(clim);
-            title(sprintf('wave path (sz=%.2f m, gz = %.2f m)',...
-                obj.sz, obj.gz));
+            title(sprintf('wave path (sz=%.2f m, gz = %.2f m) \n time window (%.2f, %.2f) ms',...
+                obj.sz, obj.gz, 1000*obj.tStart, 1000*obj.tEnd));
             xlabel('X (m)'); ylabel('Z (m)'); 
             hold on;
             plot(obj.sx, obj.sz, '*r', 'LineWidth', 1, 'MarkerSize', 10);
@@ -51,7 +51,7 @@ classdef WAVEPATH
             end
             
             figname = fullfile(figDir, ...
-                    sprintf('sz%.fm_wpath_gz%.fm.fig', obj.sz, obj.gz));
+                    sprintf('sz%.fm_wpath_gz%.fm_t%.f_%.fms.fig', obj.sz, obj.gz, 1000*obj.tStart, 1000*obj.tEnd));
             savefig(hdl, figname);
         end
         

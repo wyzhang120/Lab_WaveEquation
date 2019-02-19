@@ -1,3 +1,4 @@
+clear;
 %% unpack from saved file
 imgDir = 'C:\DFiles\Geophysics\Project\Figs_Crosswell';
 % imgDir = 'E:/Geophysics/Project/Crosswell/FWI_2arr';
@@ -6,7 +7,15 @@ figDir = fullfile(pwd, 'Figures');
 
 fmod1 = 'vp22_pad_smooth.mat';
 mod1 = load(fullfile(imgDir, fmod1));
-if mod1.fastz; vel = mod1.vp'; else; vel = mod1.vp; end
+if mod1.fastz 
+    vel = mod1.vpGaussBlur';
+    vel0 = mod1.vp';
+else 
+    vel = mod1.vpGaussBlur;
+    vel0 = mod1.vp;
+end
+s = 1./vel;
+refl_ss=(s-1./vel0)./s;
 [nz, nx] = size(vel); dx = mod1.dx; dz = mod1.dz;
 x = (0:nx-1)*dx; z = (0:nz-1)*dz;
 % source and receiver geometry
@@ -20,11 +29,10 @@ csg0 =CSG(sx, sz, gx, gz);
 csg0 = csg0.getSeis(vel,nbc,dx,nt,dt,mod1.fc,isFS);
 csg0.plotCSG();
 csg0.plotTrace(idxTrace);
-tMute=0.066;
-wp0 = csg0.getWP(idxTrace, tMute);
-wp0.plotHist(wp0);
-hdl=wp0.plotWP();
-wp0.savefig(hdl);
+t1=0.0608; t2=0.066;
+wp1 = csg0.getWP(idxTrace, 'tStart', t1, 'tEnd', t2, 'wavetype', 'refl', 'reflCoeff', refl_ss);
+hd_wp1=wp1.plotWP();
+% wp0.savefig(hdl);
 % tic; seis=a2d_mod_abc28(vel,nbc,dx,nt,dt,s,sx,sz,gx,gz,isFS); toc;
 % %% plotting
 % % set path to save figures
