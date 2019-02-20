@@ -25,7 +25,7 @@ classdef WAVEPATH
             hdl = figure;
             [nz, nx] = size(obj.wp); 
             x = (0:nx-1)*obj.dx; z = (0:nz-1)*obj.dx;
-            imagesc(x,z, obj.wp);colormap(gray);caxis(clim);
+            imagesc(x,z, obj.wp);colormap(gray);caxis(clim);axis equal;axis tight;
             title(sprintf('wave path (sz=%.2f m, gz = %.2f m) \n time window (%.2f, %.2f) ms',...
                 obj.sz, obj.gz, 1000*obj.tStart, 1000*obj.tEnd));
             xlabel('X (m)'); ylabel('Z (m)'); 
