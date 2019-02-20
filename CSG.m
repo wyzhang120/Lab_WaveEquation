@@ -179,21 +179,6 @@ classdef CSG
                 hold off;
             end
         end
-        
-        
-        function plotWP(obj, wp, idxTrace, clim)
-            figure;
-            [nz, nx] = size(obj.vel); 
-            x = (0:nx-1)*obj.dx; z = (0:nz-1)*obj.dx;
-            imagesc(x,z,wp);colormap(gray);caxis(clim);
-            title(sprintf('wave path (sz=%.2f m, gz = %.2f m)',...
-                obj.sz, obj.gz(idxTrace)));
-            xlabel('X (m)'); ylabel('Z (m)'); 
-            hold on;
-            plot(obj.sx, obj.sz, '*r', 'LineWidth', 1, 'MarkerSize', 10);
-            plot(obj.gx(idxTrace), obj.gz(idxTrace), '<g', 'MarkerFaceColor', 'g', 'MarkerSize', 5);
-            hold off;
-        end
 
         
         function saveseis(obj, hdl, type, varargin)
