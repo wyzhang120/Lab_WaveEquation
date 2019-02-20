@@ -1,7 +1,9 @@
 clear;
 %% unpack from saved file
-imgDir = 'C:\DFiles\Geophysics\Project\Figs_Crosswell';
-% imgDir = 'E:/Geophysics/Project/Crosswell/FWI_2arr';
+% imgDir = 'C:\DFiles\Geophysics\Project\Figs_Crosswell';
+imgDir = 'E:/Geophysics/Project/Crosswell/FWI_2arr';
+rayDir = 'E:\Geophysics\Inversion\Shuster_labs\Raytracinglab';
+addpath(rayDir);
 % path to save figure
 figDir = fullfile(pwd, 'Figures');
 
@@ -14,8 +16,8 @@ else
     vel = mod1.vpGaussBlur;
     vel0 = mod1.vp;
 end
-s = 1./vel;
-refl_ss=(s-1./vel0)./s;
+sln = 1./vel;
+refl_ss=(sln-1./vel0)./sln;
 [nz, nx] = size(vel); dx = mod1.dx; dz = mod1.dz;
 x = (0:nx-1)*dx; z = (0:nz-1)*dz;
 % source and receiver geometry
@@ -27,7 +29,8 @@ nbc=40; nt=double(mod1.nt); dt=mod1.dt; t=(0:nt-1)*dt; isFS=false;
 s=ricker(mod1.fc,dt);
 csg0 =CSG(sx, sz, gx, gz);
 csg0 = csg0.getSeis(vel,nbc,dx,nt,dt,mod1.fc,isFS);
-csg0.plotCSG();
+csg0 = csg0.getFirstArrival();
+csg0.plotCSG('FA', 'y');
 csg0.plotTrace(idxTrace);
 t1=0.0608; t2=0.066;
 wp1 = csg0.getWP(idxTrace, 'tStart', t1, 'tEnd', t2, 'wavetype', 'refl', 'reflCoeff', refl_ss);
