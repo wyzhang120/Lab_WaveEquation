@@ -143,18 +143,31 @@ classdef CSG
             p = inputParser;
             addRequired(p, 'obj');
             addParameter(p, 'FA', 'n', @ischar);
-            parse(p, obj, varargin{:})            
+            addParameter(p, 'ylim', 'auto');
+            addParameter(p, 'idxTrace', 0);
+            parse(p, obj, varargin{:}) 
+            idxTrace = p.Results.idxTrace;
             hdl = figure;
             t=(0:obj.nt-1)*obj.dt;
             imagesc(obj.gz, t, obj.seis); colormap(gray);
-            ylabel('Time (t)');
-            xlabel('gz(m)'); title(sprintf('seismic gather src (z=%.2f m)', obj.sz));
+            ylabel('Time (t)'); ylim(p.Results.ylim);
+            xlabel('gz(m)'); title(sprintf('shot gather (sz=%.2f m)', obj.sz));
             if strcmp(p.Results.FA, 'y')
                 if isempty(obj.tFA)
                     error('first arrival not computed yet; run "getFirstArrival" before plotting');
                 end
                 hold on;                
                 plot(obj.gz, obj.tFA, 'r');
+                hold off;
+            end
+            
+            if idxTrace
+                ntmp = 100;
+                xtmp = obj.gz(idxTrace) * ones(ntmp);
+                ylimTmp = ylim;
+                ytmp = linspace(ylimTmp(1), ylimTmp(2), ntmp);
+                hold on;
+                plot(xtmp, ytmp, '--c');
                 hold off;
             end
         end
@@ -165,10 +178,15 @@ classdef CSG
             p = inputParser;
             addRequired(p, 'obj');
             addParameter(p, 'FA', 'n', @ischar);
+            addParameter(p, 'xlim', 'auto');
+            addParameter(p, 'ylim', 'auto');
+            addParameter(p, 'LineWidth', 1);
+            addParameter(p, 'tVertical', 'n', @ischar );
             parse(p, obj, varargin{:}) 
             hdl = figure;
             t=(0:obj.nt-1)*obj.dt;
-            plot(t,obj.seis(:,idxTrace));xlabel('Time (t)'); 
+            plot(t,obj.seis(:,idxTrace), 'LineWidth', p.Results.LineWidth);xlabel('Time (s)'); 
+            xlim(p.Results.xlim); ylim(p.Results.ylim);
             title(sprintf('seismic trace (sz=%.2f m, gz = %.2f m)', obj.sz, obj.gz(idxTrace)));
             if strcmp(p.Results.FA, 'y')
                 if isempty(obj.tFA)
@@ -177,6 +195,11 @@ classdef CSG
                 hold on;                
                 plot(obj.tFA(idxTrace), 0, '*r', 'LineWidth', 1, 'MarkerSize', 10);
                 hold off;
+            end
+            
+            if strcmp(p.Results.tVertical, 'y')
+                view([90 -90]);
+                set(gca, 'xdir', 'reverse');
             end
         end
 
@@ -188,6 +211,7 @@ classdef CSG
             addRequired(p, 'hdl');
             addRequired(p, 'type', @ischar);
             addParameter(p, 'idxTrace', 0, validScalarPosNum);
+            addParameter(p, 'figtype', 'png', @ischar)
             parse(p, obj, hdl, type, varargin{:})
             type = p.Results.type;
             idxTrace = p.Results.idxTrace;
@@ -211,8 +235,8 @@ classdef CSG
                     figname_ = '';
             end
             figname = fullfile(figDir, ...
-                    sprintf('sz%.fm_%s.fig', obj.sz, figname_));
-            savefig(hdl, figname);
+                    sprintf('sz%.fm_%s.%s', obj.sz, figname_, p.Results.figtype));
+            saveas(hdl, figname);
         end
         
         
