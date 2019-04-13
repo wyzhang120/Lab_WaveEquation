@@ -47,7 +47,7 @@ classdef WAVEPATH
             p = inputParser;
             addRequired(p, 'obj');
             addRequired(p, 'hdl');
-            addParameter(p, 'figtype', 'png', @ischar);
+            addParameter(p, 'figtype', 'pdf', @ischar);
             parse(p, obj, hdl, varargin{:})
             set(hdl, 'Color', 'w');
             if ~exist('figDir', 'var')

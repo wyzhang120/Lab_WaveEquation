@@ -211,7 +211,7 @@ classdef CSG
             addRequired(p, 'hdl');
             addRequired(p, 'type', @ischar);
             addParameter(p, 'idxTrace', 0, validScalarPosNum);
-            addParameter(p, 'figtype', 'png', @ischar)
+            addParameter(p, 'figtype', 'pdf', @ischar)
             parse(p, obj, hdl, type, varargin{:})
             type = p.Results.type;
             idxTrace = p.Results.idxTrace;
